@@ -861,6 +861,14 @@ footer .wm{font-size:22px;color:var(--fg)}
     if(!g('c-tel')&&!g('c-mail')){msg.innerHTML=cgT('Deixe um <b>telefone ou e-mail</b> para retornarmos.','Leave a <b>phone number or email</b> so we can get back to you.','Deje un <b>teléfono o correo</b> para que le respondamos.');document.getElementById('c-tel').focus();return;}
     var perfil=(f.querySelector('input[name=perfil]:checked')||{}).value||'';
     var corpo=['Nome: '+g('c-nome'),'Empresa: '+g('c-emp'),'Perfil: '+perfil,'Câmeras: '+g('c-cams'),'Telefone: '+g('c-tel'),'E-mail: '+g('c-mail'),'','Mensagem:',g('c-msg')].join('\n');
+    /* grava o lead no CRM do ERP (sem esperar resposta; o WhatsApp/e-mail abre igual) */
+    try{
+      var q=new URLSearchParams(location.search),orig=q.get('utm_source')||'';
+      if(!orig&&document.referrer){try{orig=new URL(document.referrer).hostname.replace(/^www\./,'');}catch(_){}}
+      var ori='Site'+(orig&&orig.indexOf('cogn-ia.com')<0?' · '+orig:'')+(q.get('utm_campaign')?' · '+q.get('utm_campaign'):'')+' · '+(via==='wa'?'WhatsApp':'E-mail');
+      fetch('https://erp.cogn-ia.com/api/index.php',{method:'POST',mode:'no-cors',keepalive:true,credentials:'omit',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({acao:'lead_publico',nome:g('c-nome'),empresa:g('c-emp'),email:g('c-mail'),telefone:g('c-tel'),perfil:perfil,cameras:g('c-cams'),mensagem:'['+ori+'] '+g('c-msg'),origem:ori})}).catch(function(){});
+    }catch(_){}
     if(via==='wa'){
       var a=document.createElement('a');a.href='https://wa.me/5519993256363?text='+encodeURIComponent(cgT('Olá! Quero conhecer o Cogn.IA Genesys.','Hello! I would like to learn about Cogn.IA Genesys.','¡Hola! Quiero conocer Cogn.IA Genesys.')+'\n\n'+corpo);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
       msg.innerHTML=cgT('O WhatsApp abre com a mensagem pronta, é só tocar em enviar. Se não abrir, use o botão <b>WhatsApp</b> da página.','WhatsApp opens with your message ready; just tap send. If it does not open, use the <b>WhatsApp</b> button on the page.','WhatsApp se abre con su mensaje listo; solo toque enviar. Si no se abre, use el botón <b>WhatsApp</b> de la página.');
